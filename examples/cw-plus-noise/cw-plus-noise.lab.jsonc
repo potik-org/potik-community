@@ -1,0 +1,303 @@
+// ============================================================================
+// Potik lab manifest — annotated reference example
+// ============================================================================
+//
+// File:        <slug>.lab.jsonc
+// Schema:      LabSpec
+//
+// A lab is a runnable DSP graph (sources → processing → sinks) plus pedagogy
+// (objectives, hints) plus assertions (`checks`) the LabRunner evaluates while
+// the simulation runs.
+//
+//
+// Demo: a CW (continuous wave) tone is added to a complex AWGN noise source.
+// The sum is fed into both an oscilloscope (time domain) and a spectrum
+// analyzer (frequency domain) so the same signal is shown two ways at once.
+// ============================================================================
+
+{
+  // ── Identity ──────────────────────────────────────────────────────────────
+
+  // Stable identifier. Used in URLs (potik.org/labs/<id>) and localStorage
+  // (progress survives across reloads). Lowercase, dash-separated.
+  // MUST match the filename: <id>.lab.json.
+  "id": "cw-plus-noise",
+
+  // Display title shown in the lab list and in the lab panel header.
+  "title": "CW + noise — time & spectrum",
+
+  // One-paragraph description. Markdown is NOT rendered — keep it prose.
+  // Shown when this lab is highlighted in the browser and at the top of
+  // the running lab's panel.
+  "description": "A CW tone and a complex AWGN source are summed and observed simultaneously on a Scope (time domain) and a Spectrum Analyzer (frequency domain). Drag the noise amplitude up and watch the noise floor rise on the spectrum and the trace thicken on the scope — the tone stays at the same frequency but its SNR drops.",
+
+  // ── Categorization ────────────────────────────────────────────────────────
+
+  // Topic. Drives shelf grouping in the lab browser. One of:
+  //   sources | filters | modulation | demodulation | channel
+  //   measurement | radar | control
+  // See LabDomain Doc for the full list.
+  "domain": "sources",
+
+  // Coarse difficulty. Pedagogical only — not enforced.
+  //   beginner | intermediate | advanced | expert
+  "difficulty": "beginner",
+
+  // Free-form tags for filtering and search in the lab browser.
+  // Lowercase, short, no spaces. Prefer 3-7 tags.
+  "tags": ["cw", "noise", "sum", "scope", "spectrum", "snr"],
+
+  // ── Pedagogy ──────────────────────────────────────────────────────────────
+
+  // Numbered learning objectives. Shown in the lab panel as a checklist
+  // the student works through. These are FREE-TEXT prompts — they don't
+  // gate progress. Use the `checks` array (below) for assertions that
+  // do gate progress.
+  //
+  // Write each objective as a concrete action ("Run the graph and …")
+  // followed by what the student should observe. The lab is interactive,
+  // not a video — every objective should be something the student does.
+  "objectives": [
+    "Run the graph. Confirm a single tone in the spectrum at the CW frequency and a clean sinusoid plus a fuzzy halo on the scope.",
+    "Bump `noise.amplitude` from 0.10 up to 0.50. The noise floor rises by ~14 dB and the scope trace thickens proportionally.",
+    "Sweep `cw.freq` from 1 kHz up to 100 kHz. The tone peak slides across the spectrum; the scope frequency tracks visibly until the trace becomes too dense to count cycles.",
+    "Reset `noise.amplitude` to 0 — the spectrum collapses to one spike and the scope shows a pristine cosine."
+  ],
+
+  // Optional hints — revealed one at a time as the student clicks "next
+  // hint". DO NOT reveal the answer; nudge in the right direction. Three
+  // hints is a good default.
+  "hints": [
+    "The Sum block has two inputs labelled `a` and `b`. CW → `a`, noise → `b`. The output is `cw + noise` sample-by-sample.",
+    "Spectrum Analyzer power readout: tone peak is roughly 20·log10(amplitude) dBFS; noise floor is 10·log10(σ² · FFT_size / 2) dBFS. With amplitude=0.8 and σ=0.1 at FFT_size=1024 you should see a ~20 dB SNR on screen.",
+    "The Scope's `samples` window is 2048 — that's two refreshes per frame at frame_size=4096. Lower it to 256 to see individual cycles when CW freq is in the low-kHz range."
+  ],
+
+  // ── The runnable graph ────────────────────────────────────────────────────
+  //
+  // The starting graph the lab loads into the editor. Same JSON shape the
+  // editor's Save/Load uses, so you can:
+  //   1. Build a graph in the live editor at app.potik.org
+  //   2. Save → download the JSON
+  //   3. Paste it here under `graph`
+  //
+  "graph": {
+
+    // Optional sample-rate override (Hz). Absent → editor default
+    // (48 kHz). Set explicitly when:
+    //   - You need a higher rate for radar timing (1 MHz+ for c·T/2)
+    //   - You want a lower rate for cheap CPU on a small embed
+    // Once set, every block in the graph runs at this rate (there are some exceptions).
+    "samp_rate": 48000,
+
+    // Optional frame-size override (samples per worker tick). Absent →
+    // editor default (4096). Trade-off:
+    //   - Larger frames amortise internal overhead (faster at high rate)
+    //   - Smaller frames give lower per-frame UI latency
+    "frame_size": 512,
+
+    // Optional per-knob hints. Keys are "<nodeId>.<paramName>". Each value
+    // can have:
+    //   - snap:   nearest-multiple quantization at edit-time
+    //   - values: discrete set; commits to closest entry (FM presets etc)
+    //   - marks:  visual ticks around the knob arc (no quantization)
+    // Lab-scoped so the same block can be loose in one lab, tight in
+    // another.
+    // "knob_hints": {
+    //   "cw.freq":         { "snap": 100, "marks": [1000, 5000, 10000] },
+    //   "noise.amplitude": { "values": [0, 0.1, 0.25, 0.5, 1.0] }
+    // },
+
+    // ── Nodes ──────────────────────────────────────────────────────────────
+    //
+    // Each node is one DSP block instance. Required:
+    //   id        unique within this graph (used by edges + checks)
+    //   position  { x, y } — pixel coordinates in the editor canvas
+    //   data.kind block kind from the registry (snake_case, see
+    //             BLOCKS Doc)
+    //   data.params object of params; keys must match the block's
+    //               `params` array in the registry, values must be
+    //               number | string | boolean.
+    //
+    "nodes": [
+      {
+        "id": "cw",
+        "type": "block",
+        "position": { "x": 0, "y": 19 },
+        "data": {
+          // CW (continuous wave) source — emits cos(2π·freq·t + phase) · amplitude.
+          "kind": "cw_source",
+          "params": {
+            "freq": 1000,        // Hz, tone frequency. Must be < samp_rate/2 (Nyquist).
+            "amplitude": 0.8,    // Linear peak amplitude. 1.0 = full-scale.
+            "phase": 0           // Radians, starting phase. Usually 0.
+          }
+        }
+      },
+      {
+        "id": "noise",
+        "type": "block",
+        "position": { "x": 0, "y": 402 },
+        "data": {
+          // Complex AWGN — additive white Gaussian noise.
+          "kind": "noise_source",
+          "params": {
+            "amplitude": 0.1,    // σ (standard deviation) of the noise. 0 = silence.
+            "mode": "complex",   // "real" or "complex". Use "complex" for IQ pipelines.
+            "seed": 42           // PRNG seed. Same seed → reproducible noise.
+          }
+        }
+      },
+      {
+        "id": "sum",
+        "type": "block",
+        "position": { "x": 407, "y": 342 },
+        "data": {
+          // Two-input adder. Inputs labelled `a` and `b`; output is a+b.
+          "kind": "sum",
+          "params": {}           // No params — Sum is pure structure.
+        }
+      },
+      {
+        "id": "scope",
+        "type": "block",
+        "position": { "x": 576, "y": 0 },
+        "data": {
+          // Time-domain sink. Renders the most recent `samples` samples
+          // as a continuous waveform.
+          "kind": "oscilloscope",
+          "params": {
+            "samples": 4096,         // Window length. Higher = more history.
+            "trigger": "auto",       // "auto" | "rising" | "falling" | "off"
+            "trigger_level": 0.0     // Threshold for triggered modes.
+          }
+        }
+      },
+      {
+        "id": "sa",
+        "type": "block",
+        "position": { "x": 576, "y": 421 },
+        "data": {
+          // Frequency-domain sink. FFT-based power spectrum.
+          "kind": "spectrum_analyzer",
+          "params": {
+            "fft_size": 1024,        // Power of two. Higher = finer freq resolution, slower refresh.
+            "window": "hann",        // "rect" | "hann" | "hamming" | "blackman"
+            "avg": 4                 // Exponential averaging factor. 1 = no smoothing, 8 = sluggish.
+          }
+        }
+      }
+    ],
+
+    // ── Edges ──────────────────────────────────────────────────────────────
+    //
+    // Each edge wires one block's output port to another block's input port.
+    //   source / target          block ids from `nodes[].id`
+    //   sourceHandle / targetHandle  port names defined by the block kind.
+    //                                Most blocks have a single output named
+    //                                "out" and a single input named "in".
+    //                                Multi-port blocks (Sum, Mixer) use
+    //                                lettered or numeric handles.
+    //   id                       any unique string (used by React Flow
+    //                            internally; convention is "e1", "e2", …)
+    "edges": [
+      { "id": "e1", "source": "cw",    "target": "sum",   "sourceHandle": "out", "targetHandle": "a" },
+      { "id": "e2", "source": "noise", "target": "sum",   "sourceHandle": "out", "targetHandle": "b" },
+      { "id": "e3", "source": "sum",   "target": "scope", "sourceHandle": "out", "targetHandle": "in" },
+      { "id": "e4", "source": "sum",   "target": "sa",    "sourceHandle": "out", "targetHandle": "in" }
+    ]
+  },
+
+  // ── Checks (Pedagogy/Evaluation) ──────────────────────────────────────────────────────
+  //
+  // Assertions the LabRunner evaluates against the live (or static) graph.
+  // Each check has at minimum:
+  //   id       unique within this lab; used to store pass/fail state
+  //   kind     selects the predicate; see full list below
+  //   label    human-readable, shown in the lab panel
+  //
+  // Static checks (fire ONCE on load — no simulation needed):
+  //   block_present   block of given kind exists
+  //   block_absent    block of given kind does NOT exist
+  //   block_count     graph has exactly N of a kind
+  //   param_within    a specific block's param is in [expected ± tolerance]
+  //   edge_exists     edge from "<blockId>.<portName>" to another exists
+  //
+  // Live checks (fire continuously while the graph runs):
+  //   spectrum_peak_freq      peak in a spectrum is at expected Hz ± tol
+  //   spectrum_peak_db        peak amplitude is at expected dB ± tol
+  //   spectrum_power_in_band  total power in [fMin, fMax] band
+  //   spectrum_floor_below    no bins in band exceed threshold dB
+  //   spectrum_mask           piecewise mask: every bin in band ∈ [dbMin, dbMax]
+  //   signal_peak_amplitude   |signal| within max/min on a scope
+  //   signal_rms              RMS of scope trace ≈ expected ± tol
+  //   power_db_within         power meter reading ≈ expected ± tol
+  //   rd_target_at            range-Doppler peak at (range, velocity) with SNR
+  //   rd_no_target_in         no peak above maxDb in (range, velocity) region
+  //   digital_bit_error_rate  BER of a digital_analyzer vs PRBS replica
+  //
+  // Full schema: Checks Doc.
+  //
+  // For this lab we use only block_present checks — keeps the example
+  // simple. Real labs typically pair structural checks with live spectrum
+  // or signal checks.
+  "checks": [
+    {
+      "id": "have-cw",
+      "kind": "block_present",
+      "label": "Graph has a CW source",
+      "blockKind": "cw_source"
+    },
+    {
+      "id": "have-noise",
+      "kind": "block_present",
+      "label": "Graph has a noise source",
+      "blockKind": "noise_source"
+    },
+    {
+      "id": "have-sum",
+      "kind": "block_present",
+      "label": "Graph has a Sum block",
+      "blockKind": "sum"
+    },
+    {
+      "id": "have-scope",
+      "kind": "block_present",
+      "label": "Graph has an Oscilloscope",
+      "blockKind": "oscilloscope"
+    },
+    {
+      "id": "have-sa",
+      "kind": "block_present",
+      "label": "Graph has a Spectrum Analyzer",
+      "blockKind": "spectrum_analyzer"
+    }
+    //
+    // Example LIVE checks you could add to this lab:
+    //
+    // {
+    //   "id": "peak-at-1k",
+    //   "kind": "spectrum_peak_freq",
+    //   "label": "Spectrum peak is at 1 kHz",
+    //   "block": "sa",
+    //   "expected": 1000,
+    //   "tolerance": 50 // accepts 950 Hz ≤ peak ≤ 1050 Hz (a 100 Hz wide window).
+    // },
+    // {
+    //   "id": "snr-above-15",
+    //   "kind": "spectrum_peak_db",
+    //   "label": "Tone peak is ≥ 15 dB above noise floor",
+    //   "block": "sa",
+    //   "expected": -2,
+    //   "tolerance": 3
+    // }
+  ]
+
+  // ── Optional: a reference solution ─────────────────────────────────────────
+  //
+  // If you want a "Show solution" button, add a `solution` field with the
+  // same shape as `graph`. The LabRunner replaces the working graph with
+  // this when the user reveals it.
+  //
+  // "solution": { "nodes": [...], "edges": [...] }
+}
