@@ -1,0 +1,15 @@
+# Code owners — the gate files. Any PR touching these requires the maintainer's
+# (code-owner) approval, even from collaborators who have Write/merge access.
+#
+# Lab submissions live under submissions/ and are intentionally NOT owned here,
+# so a community reviewer can merge a lab PR with just the lab-validate check
+# green — no maintainer approval needed. But they CANNOT weaken the gates
+# (CI workflow, validator, schema, deps) without the maintainer signing off.
+#
+# Replace @potik-admin with your maintainer GitHub username if different.
+
+/.github/          @potik-admin
+/scripts/          @potik-admin
+/lab.schema.json   @potik-admin
+/package.json      @potik-admin
+/package-lock.json @potik-admin
