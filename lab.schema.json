@@ -5,7 +5,7 @@
   "description": "Schema for a Potik community lab. Mirrors LabSpec in the engine's packages/labs/src/types.ts. Regenerated when that type changes.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "title", "description", "domain", "difficulty", "tags", "objectives", "graph", "checks"],
+  "required": ["id", "title", "description", "domain", "difficulty", "tags", "objectives", "graph"],
   "properties": {
     "id": {
       "type": "string",
