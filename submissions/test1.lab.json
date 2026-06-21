@@ -1,0 +1,65 @@
+{
+  "id": "test1",
+  "title": "test1",
+  "description": "test1",
+  "domain": "sources",            
+  "difficulty": "beginner",       
+  "tags": ["sources"],
+  "objectives": ["Run it and observe CW on SA!!!!1111"],
+  "graph": {
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "block",
+      "position": {
+        "x": -189.14285714285728,
+        "y": 274.64285714285717
+      },
+      "data": {
+        "kind": "cw_source",
+        "params": {
+          "freq": 1000,
+          "amplitude": 1,
+          "phase": 0
+        }
+      },
+      "width": 320,
+      "height": 323,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "n2",
+      "type": "block",
+      "position": {
+        "x": 623.7142857142857,
+        "y": 248.92857142857144
+      },
+      "data": {
+        "kind": "spectrum_analyzer",
+        "params": {
+          "fft_size": 1024,
+          "window": "hann",
+          "avg": 4
+        }
+      },
+      "width": 340,
+      "height": 362,
+      "selected": false,
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "n1",
+      "sourceHandle": "out",
+      "target": "n2",
+      "targetHandle": "in",
+      "id": "reactflow__edge-n1out-n2in"
+    }
+  ]
+},
+  "checks": [
+    { "id": "has-cw", "kind": "block_present", "label": "Has a cw", "blockKind": "cw_source" }
+  ]
+}
