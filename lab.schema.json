@@ -130,7 +130,8 @@
             "power_db_within",
             "rd_target_at",
             "rd_no_target_in",
-            "digital_bit_error_rate"
+            "digital_bit_error_rate",
+            "ber"
           ]
         }
       }
