@@ -1,0 +1,5 @@
+{
+  "id": "broken-demo-2",
+  "title": "oops"
+  "description": "missing the comma after title — invalid JSON"
+}
