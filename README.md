@@ -7,7 +7,7 @@ objectives and assertions (`checks`). It's a single JSON file — no code, no bu
 
 ## Contribute a lab in 3 steps
 
-1. **Build it** in the live editor at [potik.org](https://potik.org): drag blocks,
+1. **Build it** in the live editor at [app.potik.org](https://app.potik.org): drag blocks,
    wire them, tune params. **File → Save → JSON** gives you the `graph`.
 2. **Wrap it** in a `LabSpec`. Copy
    [examples/cw-plus-noise](examples/cw-plus-noise/lab/cw-plus-noise.lab.jsonc)
@@ -36,7 +36,7 @@ Run it locally before pushing: `npm install && npm test`.
 ## After your PR
 
 A maintainer reviews the lab live and merges it. It then gets mirrored into
-Potik's engine and published at `potik.org/labs/<id>`. (You don't need access to
+Potik's engine and published at `app.potik.org/labs/<id>`. (You don't need access to
 the engine repo — watch your PR for status.)
 
 ## Check kinds you can use
