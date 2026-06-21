@@ -68,7 +68,8 @@
     },
     "node": {
       "type": "object",
-      "additionalProperties": false,
+      "description": "A graph node. Extra properties allowed so the editor's Save→JSON export (React Flow runtime fields like width/height/selected/dragging) validates as-is — the engine ignores them.",
+      "additionalProperties": true,
       "required": ["id", "position", "data"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
@@ -95,7 +96,7 @@
     },
     "edge": {
       "type": "object",
-      "additionalProperties": false,
+      "additionalProperties": true,
       "required": ["source", "target"],
       "properties": {
         "id": { "type": "string" },

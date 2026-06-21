@@ -143,7 +143,7 @@ for (const { file, rel, spec, parseErrors } of loaded) {
       // Published-slug collision applies to submissions only — examples may
       // intentionally mirror a published lab (they're copy-me references).
       if (rel.startsWith('submissions/') && published.ok && published.ids.has(spec.id)) {
-        errors.push(`id "${spec.id}" is already published — pick a unique slug (potik.org/labs/${spec.id} exists)`);
+        errors.push(`id "${spec.id}" is already published — pick a unique slug (app.potik.org/labs/${spec.id} exists)`);
       }
     }
   }

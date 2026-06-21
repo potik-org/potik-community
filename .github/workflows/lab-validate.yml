@@ -6,13 +6,12 @@ name: lab-validate
 # private engine repo; this is structure + references only.
 
 on:
+  # No paths filter: `validate` is a REQUIRED status check, so it must run (and
+  # report) on EVERY PR. A path-filtered workflow that gets skipped leaves the
+  # required check stuck on "Expected — waiting" forever (and blocks merge).
+  # PRs with no lab changes pass green — the validator exits 0 when it finds no
+  # lab files.
   pull_request:
-    paths:
-      - 'submissions/**'
-      - 'examples/**'
-      - 'lab.schema.json'
-      - 'scripts/**'
-      - '.github/workflows/lab-validate.yml'
   push:
     branches: [main]
 
