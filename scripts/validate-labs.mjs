@@ -50,7 +50,14 @@ async function fetchPublishedIds() {
   try {
     let text;
     if (/^https?:/.test(INDEX_URL)) {
-      const res = await fetch(INDEX_URL, { headers: { 'cache-control': 'no-cache' } });
+      const res = await fetch(INDEX_URL, {
+        headers: {
+          'cache-control': 'no-cache',
+          'accept': 'application/json',
+          // A real UA gets past Cloudflare rules that 403 empty/undici user-agents.
+          'user-agent': 'Mozilla/5.0 (compatible; potik-community-ci/1.0)',
+        },
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       text = await res.text();
     } else {

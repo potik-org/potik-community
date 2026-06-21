@@ -1,0 +1,22 @@
+{
+  "id": "hello-spectrum",
+  "title": "Hello spectrum — find the tone",
+  "description": "A single CW tone into a Spectrum Analyzer. Run it and read the peak frequency off the spectrum.",
+  "domain": "sources",
+  "difficulty": "beginner",
+  "tags": ["cw", "spectrum", "first"],
+  "objectives": ["Run the graph and confirm one peak.", "Read the peak — it sits at 1 kHz."],
+  "graph": {
+    "nodes": [
+      { "id": "cw1", "position": { "x": 80, "y": 100 }, "data": { "kind": "cw_source", "params": { "freq": 1000, "amplitude": 0.5, "phase": 0 } } },
+      { "id": "sa1", "position": { "x": 360, "y": 100 }, "data": { "kind": "spectrum_analyzer", "params": { "fft_size": 1024, "window": "hann", "avg": 4 } } }
+    ],
+    "edges": [
+      { "id": "e1", "source": "cw1", "target": "sa1", "sourceHandle": "out", "targetHandle": "in" }
+    ]
+  },
+  "checks": [
+    { "id": "has-cw", "kind": "block_present", "label": "Has a CW source", "blockKind": "cw_source" },
+    { "id": "peak-1k", "kind": "spectrum_peak_freq", "label": "Peak at 1 kHz", "block": "sa1", "expected": 1000, "tolerance": 20 }
+  ]
+}

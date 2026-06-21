@@ -27,3 +27,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+        env:
+          # The custom domain (app.potik.org) sits behind Cloudflare bot
+          # protection that 403s CI runners. The *.pages.dev hostname serves the
+          # same prod index without the zone WAF — reliable from Actions.
+          # Confirm the subdomain matches your Pages project name.
+          POTIK_INDEX_URL: https://potik-engine.pages.dev/labs/index.json
