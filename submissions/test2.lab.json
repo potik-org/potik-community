@@ -1,0 +1,54 @@
+{
+  "id": "test2",
+  "title": "test2",
+  "description": "test2",
+  "domain": "measurement",
+  "difficulty": "beginner",
+  "tags": [],
+  "objectives": [],
+  "graph": {
+    "nodes": [
+      {
+        "id": "n1",
+        "type": "block",
+        "position": {
+          "x": -96,
+          "y": 263
+        },
+        "data": {
+          "kind": "cw_source",
+          "params": {
+            "freq": 1000,
+            "amplitude": 1,
+            "phase": 0
+          }
+        }
+      },
+      {
+        "id": "n2",
+        "type": "block",
+        "position": {
+          "x": 624,
+          "y": 249
+        },
+        "data": {
+          "kind": "spectrum_analyzer",
+          "params": {
+            "fft_size": 1024,
+            "window": "hann",
+            "avg": 4
+          }
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "reactflow__edge-n1out-n2in",
+        "source": "n1",
+        "target": "n2",
+        "sourceHandle": "out",
+        "targetHandle": "in"
+      }
+    ]
+  }
+}
