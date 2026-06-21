@@ -2,8 +2,8 @@
   "id": "test1",
   "title": "test1",
   "description": "test1",
-  "domain": "sources",            // sources|filters|modulation|demodulation|channel|measurement|radar|control
-  "difficulty": "beginner",       // beginner|intermediate|advanced|expert
+  "domain": "sources",            
+  "difficulty": "beginner",       
   "tags": ["sources"],
   "objectives": ["Run it and observe CW on SA!!!!1111"],
   "graph": {
@@ -58,7 +58,7 @@
       "id": "reactflow__edge-n1out-n2in"
     }
   ]
-}
+},
   "checks": [
     { "id": "has-cw", "kind": "block_present", "label": "Has a cw", "blockKind": "cw_source" }
   ]
