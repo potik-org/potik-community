@@ -23,6 +23,7 @@ each lab against [`lab.schema.json`](lab.schema.json) plus semantic static gates
 
 - schema: required fields, `domain` / `difficulty` / check-`kind` enums, graph shape
 - `id` matches the filename
+- **slug is unique** — your `id` isn't already published (checked live against potik's lab index) or used by another submission
 - every edge references a real node; every check that names a `block` references a real node
 - unique node ids and check ids; `block_present/absent/count` carry a `blockKind`
 

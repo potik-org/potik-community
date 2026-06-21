@@ -40,6 +40,28 @@ const schema = JSON.parse(readFileSync(join(root, 'lab.schema.json'), 'utf-8'));
 const ajv = new Ajv({ allErrors: true, allowUnionTypes: true });
 const validateSchema = ajv.compile(schema);
 
+// ── slug uniqueness source = the live lab index (single source of truth) ─────
+// No derived "reserved-slugs" file — we read potik's published index directly.
+// POTIK_INDEX_URL is an http(s) URL (default) or a local path (tests). Fails
+// open: if the index can't be read, the published-slug check is skipped (the
+// bridge's canonical_slugs gate is the race-free backstop).
+const INDEX_URL = process.env.POTIK_INDEX_URL ?? 'https://app.potik.org/labs/index.json';
+async function fetchPublishedIds() {
+  try {
+    let text;
+    if (/^https?:/.test(INDEX_URL)) {
+      const res = await fetch(INDEX_URL, { headers: { 'cache-control': 'no-cache' } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      text = await res.text();
+    } else {
+      text = readFileSync(INDEX_URL, 'utf-8');
+    }
+    return { ids: new Set((JSON.parse(text).labs ?? []).map((l) => l.id)), ok: true };
+  } catch (e) {
+    return { ids: new Set(), ok: false, err: String(e?.message ?? e) };
+  }
+}
+
 // ── semantic gates the schema can't express ─────────────────────────────────
 function staticGates(spec, file) {
   const errs = [];
@@ -72,18 +94,35 @@ function staticGates(spec, file) {
 }
 
 // ── run ──────────────────────────────────────────────────────────────────────
-const files = SEARCH_DIRS.flatMap((d) => walk(join(root, d)));
+const files = SEARCH_DIRS.flatMap((d) => walk(join(root, d))).sort();
 if (files.length === 0) {
   console.log(`${C.y}No lab files found under ${SEARCH_DIRS.join(', ')}.${C.x}`);
   process.exit(0);
 }
 
-let failed = 0;
-for (const file of files.sort()) {
-  const rel = file.slice(root.length + 1);
-  const errors = [];
+// Parse everything once, then derive cross-file facts (intra-repo id dups +
+// published-slug collisions) before reporting per file.
+const loaded = files.map((file) => {
   const parseErrors = [];
   const spec = parseJsonc(readFileSync(file, 'utf-8'), parseErrors, { allowTrailingComma: true });
+  return { file, rel: file.slice(root.length + 1), spec, parseErrors };
+});
+
+const idToFiles = new Map();
+for (const { rel, spec, parseErrors } of loaded) {
+  if (parseErrors.length || typeof spec?.id !== 'string') continue;
+  if (!idToFiles.has(spec.id)) idToFiles.set(spec.id, []);
+  idToFiles.get(spec.id).push(rel);
+}
+
+const published = await fetchPublishedIds();
+console.log(published.ok
+  ? `${C.d}slug source: ${INDEX_URL} — ${published.ids.size} published ids${C.x}`
+  : `${C.y}⚠ could not read the lab index (${INDEX_URL}): ${published.err} — skipping published-slug uniqueness (the bridge's canonical_slugs gate still applies)${C.x}`);
+
+let failed = 0;
+for (const { file, rel, spec, parseErrors } of loaded) {
+  const errors = [];
   if (parseErrors.length) {
     errors.push(`JSON parse: ${parseErrors.length} error(s) (first at offset ${parseErrors[0].offset})`);
   } else {
@@ -91,6 +130,15 @@ for (const file of files.sort()) {
       for (const e of validateSchema.errors) errors.push(`schema ${e.instancePath || '/'} ${e.message}`);
     }
     errors.push(...staticGates(spec, file));
+    if (typeof spec.id === 'string') {
+      const dupes = (idToFiles.get(spec.id) ?? []).filter((f) => f !== rel);
+      if (dupes.length) errors.push(`id "${spec.id}" is not unique — also defined in ${dupes.join(', ')}`);
+      // Published-slug collision applies to submissions only — examples may
+      // intentionally mirror a published lab (they're copy-me references).
+      if (rel.startsWith('submissions/') && published.ok && published.ids.has(spec.id)) {
+        errors.push(`id "${spec.id}" is already published — pick a unique slug (potik.org/labs/${spec.id} exists)`);
+      }
+    }
   }
 
   if (errors.length) {
