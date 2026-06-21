@@ -1,0 +1,29 @@
+name: lab-validate
+
+# Validate every submitted lab against lab.schema.json + the semantic static
+# gates. Runs on PRs (and pushes to main) — the gate a contributor sees before
+# a maintainer reviews. Block KINDS are validated later by labcheck on the
+# private engine repo; this is structure + references only.
+
+on:
+  pull_request:
+    paths:
+      - 'submissions/**'
+      - 'examples/**'
+      - 'lab.schema.json'
+      - 'scripts/**'
+      - '.github/workflows/lab-validate.yml'
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test

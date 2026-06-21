@@ -1,0 +1,15 @@
+{
+  "name": "potik-community",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Community-contributed labs and embeds for Potik.",
+  "scripts": {
+    "test": "node scripts/validate-labs.mjs",
+    "validate": "node scripts/validate-labs.mjs"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1",
+    "jsonc-parser": "^3.3.1"
+  }
+}

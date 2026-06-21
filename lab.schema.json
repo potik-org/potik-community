@@ -1,0 +1,138 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://potik.org/lab.schema.json",
+  "title": "Potik LabSpec",
+  "description": "Schema for a Potik community lab. Mirrors LabSpec in the engine's packages/labs/src/types.ts. Regenerated when that type changes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "description", "domain", "difficulty", "tags", "objectives", "graph", "checks"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Lowercase dash-separated slug. MUST match the filename <id>.lab.json(c)."
+    },
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string", "minLength": 1 },
+    "domain": {
+      "type": "string",
+      "enum": ["sources", "filters", "modulation", "demodulation", "channel", "measurement", "radar", "control"]
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": ["beginner", "intermediate", "advanced", "expert"]
+    },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "objectives": { "type": "array", "items": { "type": "string" } },
+    "hints": { "type": "array", "items": { "type": "string" } },
+    "goal": { "type": "string" },
+    "next": { "type": "array", "items": { "type": "string" } },
+    "visibility": {
+      "type": "string",
+      "enum": ["public", "staging", "draft"],
+      "description": "Deployment classification. Absent ⇒ public. Contributors normally omit this; maintainers set it during review."
+    },
+    "graph": { "$ref": "#/definitions/graph" },
+    "solution": { "$ref": "#/definitions/graph" },
+    "checks": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/check" }
+    }
+  },
+  "definitions": {
+    "graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodes", "edges"],
+      "properties": {
+        "nodes": { "type": "array", "items": { "$ref": "#/definitions/node" } },
+        "edges": { "type": "array", "items": { "$ref": "#/definitions/edge" } },
+        "samp_rate": { "type": "number", "exclusiveMinimum": 0 },
+        "frame_size": { "type": "integer", "exclusiveMinimum": 0 },
+        "n_elements": { "type": "integer", "exclusiveMinimum": 0 },
+        "debug_perf": { "type": "boolean" },
+        "scene_time_scale": { "type": "number" },
+        "knob_hints": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "snap": { "type": "number" },
+              "values": { "type": "array", "items": { "type": "number" } },
+              "marks": { "type": "array", "items": { "type": "number" } }
+            }
+          }
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "position", "data"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string" },
+        "position": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["x", "y"],
+          "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "params"],
+          "properties": {
+            "kind": { "type": "string", "minLength": 1 },
+            "params": {
+              "type": "object",
+              "additionalProperties": { "type": ["number", "string", "boolean"] }
+            }
+          }
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "target"],
+      "properties": {
+        "id": { "type": "string" },
+        "source": { "type": "string", "minLength": 1 },
+        "target": { "type": "string", "minLength": 1 },
+        "sourceHandle": { "type": ["string", "null"] },
+        "targetHandle": { "type": ["string", "null"] }
+      }
+    },
+    "check": {
+      "type": "object",
+      "required": ["id", "kind", "label"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "block_present",
+            "block_absent",
+            "block_count",
+            "param_within",
+            "edge_exists",
+            "spectrum_peak_freq",
+            "spectrum_peak_db",
+            "spectrum_power_in_band",
+            "spectrum_floor_below",
+            "spectrum_mask",
+            "signal_peak_amplitude",
+            "signal_rms",
+            "power_db_within",
+            "rd_target_at",
+            "rd_no_target_in",
+            "digital_bit_error_rate"
+          ]
+        }
+      }
+    }
+  }
+}
